@@ -153,7 +153,7 @@ void quit_function() {
 
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
-			maze[i][j] = 0; // for the memory cleaning after work of the matrix (THE MOST IMPORTANT!!!)
+			maze[i][j] = NULL; // for the memory cleaning after work of the matrix (THE MOST IMPORTANT!!!)
 		}
 	}
 
