@@ -1,4 +1,4 @@
-﻿#include <SDL.h>
+#include <SDL.h>
 #include <SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -21,6 +21,11 @@ SDL_Texture* player_left = NULL;
 SDL_Texture* player_down = NULL;
 SDL_Texture* player_up = NULL;
 SDL_Texture* currentPlayer = NULL;
+
+// added...
+SDL_Texture* enemy_1 = NULL;
+SDL_Texture* enemy_2 = NULL;
+// added...
 
 SDL_Surface* labyrinth = NULL; // the labyrinth's surface
 const int CELL_SIZE = 1; // the size of one map's cell (in pixels)
@@ -163,11 +168,13 @@ void quit_function() {
 	SDL_DestroyTexture(player_down);
 	SDL_DestroyTexture(player_up);
 	SDL_DestroyTexture(currentPlayer);
+	SDL_DestroyTexture(enemy_1);
+	SDL_DestroyTexture(enemy_2);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_FreeSurface(labyrinth);
 	labyrinth = NULL;
-	currentPlayer = player_right = player_left = player_down = player_up = map = NULL;
+	currentPlayer = player_right = player_left = player_down = player_up = map = enemy_1 = enemy_2 = NULL;
 	renderer = NULL;
 	window = NULL;
 
@@ -191,6 +198,8 @@ int main(int argc, char* argv[]) {
 		player_left = loadTexture("Images/main_player_left.bmp");
 		player_down = loadTexture("Images/main_player_down.bmp");
 		player_up = loadTexture("Images/main_player_up.bmp");
+		enemy_1 = loadTexture("Images/the_enemy.bmp");
+		enemy_2 = loadTexture("Images/the_enemy.bmp");
 
 		labyrinth = loadSurface("Images/wbmap.bmp");
 		analyzeMapAndFillMaze(labyrinth, maze, CELL_SIZE);
@@ -259,9 +268,18 @@ int main(int argc, char* argv[]) {
 				SDL_Rect mapRect = { NULL, NULL, WIDTH, HEIGHT };
 				SDL_RenderCopy(renderer, map, NULL, &mapRect);
 
+				// the enemy_1 rendering
+				SDL_Rect enemyRect_1 = { 250, 20, 60, 60 };
+				SDL_RenderCopy(renderer, enemy_1, NULL, &enemyRect_1);
+
+				// the enemy_2 rendering
+				SDL_Rect enemyRect_2 = { 995, 640, 60, 60 };
+				SDL_RenderCopy(renderer, enemy_2, NULL, &enemyRect_2);
+
 				// the player rendering
 				SDL_Rect playerRect = { playerPos.x, playerPos.y, PLAYER_WIDTH, PLAYER_HEIGHT };
 				SDL_RenderCopy(renderer, currentPlayer, NULL, &playerRect);
+
 
 				SDL_RenderPresent(renderer); // the updating of the textures on the map
 			}
