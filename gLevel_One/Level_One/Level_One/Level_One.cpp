@@ -191,6 +191,8 @@ int main(int argc, char* argv[]) {
 	}
 	else {
 
+		bool keyStates[SDL_NUM_SCANCODES] = { false }; // the mass of the key activity values 
+
 		// the main textures' loadings:
 		map = loadTexture("Images/the_map.bmp");
 		currentPlayer = loadTexture("Images/main_player_right.bmp");
@@ -214,52 +216,50 @@ int main(int argc, char* argv[]) {
 		else {
 
 			bool isRunning = true;
-			SDL_Event event;
 
 			while (isRunning) {
 
-				while (SDL_PollEvent(&event) != 0) {
+				SDL_Event event;
+
+				while (SDL_PollEvent(&event)) {
 
 					if (event.type == SDL_QUIT) {
 						isRunning = false; // the first exit out of the game (the main*)
 					}
-
-					else if (event.type == SDL_KEYDOWN) {
-
-						int newX = playerPos.x;
-						int newY = playerPos.y;
-
-						switch (event.key.keysym.sym) {
-
-						case SDLK_q:
-							isRunning = false; // the second exit out of tha game (added*)
-							break;
-						case SDLK_w:
-							newY -= 10;
-							currentPlayer = player_up;
-							break;
-						case SDLK_s:
-							newY += 10;
-							currentPlayer = player_down;
-							break;
-						case SDLK_a:
-							newX -= 10;
-							currentPlayer = player_left;
-							break;
-						case SDLK_d:
-							newX += 10;
-							currentPlayer = player_right;
-							break;
-						default:
-							// just nothing...
-							break;
-						}
-
-						if (canMoveTo(newX, newY)) {
-							playerPos.x = newX;
-							playerPos.y = newY;
-						}
+					if (event.type == SDL_KEYDOWN) {
+						keyStates[event.key.keysym.scancode] = true;
 					}
+					if (event.type == SDL_KEYUP) {
+						keyStates[event.key.keysym.scancode] = false;
+					}
+				}
+
+				int newX = playerPos.x;
+				int newY = playerPos.y;
+
+				if (keyStates[SDL_SCANCODE_W]) { 
+					newY -= 5; 
+					currentPlayer = player_up;
+				}
+				else if (keyStates[SDL_SCANCODE_S]) { 
+					newY += 5; 
+					currentPlayer = player_down;
+				}
+				else if (keyStates[SDL_SCANCODE_A]) { 
+					newX -= 5; 
+					currentPlayer = player_left;
+				}
+				else if (keyStates[SDL_SCANCODE_D]) { 
+					newX += 5; 
+					currentPlayer = player_right;
+				}
+				else if (keyStates[SDL_SCANCODE_Q]) {
+					isRunning = false; // the second exit out of the game (added*)
+				}
+				
+				if (canMoveTo(newX, newY)) {
+					playerPos.x = newX;
+					playerPos.y = newY;
 				}
 
 				SDL_RenderClear(renderer);
@@ -280,8 +280,9 @@ int main(int argc, char* argv[]) {
 				SDL_Rect playerRect = { playerPos.x, playerPos.y, PLAYER_WIDTH, PLAYER_HEIGHT };
 				SDL_RenderCopy(renderer, currentPlayer, NULL, &playerRect);
 
-
 				SDL_RenderPresent(renderer); // the updating of the textures on the map
+
+				SDL_Delay(28);
 			}
 		}
 	}
