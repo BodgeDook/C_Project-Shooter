@@ -409,7 +409,7 @@ int main(int argc, char* argv[]) {
 		else {
 
 			bool isRunning = true;
-			currentPlayer = player_right; // the start position of the player...
+			currentPlayer = player_right; // the start pose of the player...
 
 			while (isRunning) {
 
