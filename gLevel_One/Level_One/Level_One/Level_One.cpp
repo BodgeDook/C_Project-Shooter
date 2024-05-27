@@ -1,5 +1,5 @@
 #include <SDL.h>
-// #include <SDL_image.h> // deleted for now...
+// #include <SDL_image.h> // removed for now...
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -10,8 +10,8 @@ const int PLAYER_HEIGHT = 60; // final value!
 const int ENEMY_SIZES = 60;
 const int BULLET_SIZE = 10;
 
-const int WALL = -1; // barrier cell of the matrix
-const int BLANK = -2; // free cell of the matrix
+const int WALL = -1; // barrier cell of the matrix (a labyrinth's wall)
+const int BLANK = -2; // free cell of the matrix (a map's free hall)
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -22,7 +22,7 @@ SDL_Texture* player_right = NULL;
 SDL_Texture* player_left = NULL;
 SDL_Texture* player_down = NULL;
 SDL_Texture* player_up = NULL;
-SDL_Texture* currentPlayer = NULL;
+SDL_Texture* currentPlayer = NULL; // the main player's texture!
 
 // added...
 SDL_Texture* enemy_1 = NULL;
@@ -46,7 +46,7 @@ Player_Position playerPos; // the position of the player on the game's map
 typedef struct Bullet {
 	int x;
 	int y;
-	bool is_fired;
+	bool is_fired; // "shooted bullet" or not
 	int direction;
 } Bullet; // the behave of the player's gun bullet of the playing field
 
@@ -60,7 +60,7 @@ int initialization() {
 	}
 	else {
 
-		window = SDL_CreateWindow("Level_One:_Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		window = SDL_CreateWindow("Level_One:_DEMO(v2.0)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 			WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
 
 		if (!window) {
@@ -122,12 +122,13 @@ Uint32 get_pixel32(SDL_Surface* surface, int x, int y) {
 void mazeFilling(SDL_Surface* labirinth, int maze[720][1080], int cellSize) {
 
 	if (labirinth == NULL) {
-		printf("Labirinth surface is null...\n");
+		printf("Labirinth's problem with: %s\n", SDL_GetError());
 		return;
 	}
 
 	for (int y = 0; y < labirinth->h; y += cellSize) {
 		for (int x = 0; x < labirinth->w; x += cellSize) {
+
 			Uint32 pixel = get_pixel32(labirinth, x, y);
 			SDL_Color color;
 			SDL_GetRGB(pixel, labirinth->format, &color.r, &color.g, &color.b);
@@ -166,8 +167,60 @@ bool playerCollision(int PosX, int PosY) {
 	return true;
 }
 
+int getBulletDirection(SDL_Texture* currentPlayer) {
+
+	if (currentPlayer == player_up) {
+		return 0;
+	}
+	else if (currentPlayer == player_down) {
+		return 1;
+	}
+	else if (currentPlayer == player_left) {
+		return 2;
+	}
+	else if (currentPlayer == player_right) {
+		return 3;
+	}
+
+	return -1; // if the player's direction wasn't defined...
+}
+
+// if there's n0t any wall right in front of the player, we can shoot the bullet:
+bool canShoot(int direction) {
+
+	int checkX = playerPos.x;
+	int checkY = playerPos.y;
+
+	switch (direction) {
+	case 0: // up
+		checkY -= CELL_SIZE;
+		break;
+	case 1: // down
+		checkY += PLAYER_HEIGHT;
+		break;
+	case 2: // left
+		checkX -= CELL_SIZE;
+		break;
+	case 3: // right
+		checkX += PLAYER_WIDTH;
+		break;
+	default:
+		// just nothing for now...
+		break;
+	}
+
+	int gridX = checkX / CELL_SIZE;
+	int gridY = checkY / CELL_SIZE;
+
+	if (gridX < 0 || gridY < 0 || gridX >= WIDTH / CELL_SIZE || gridY >= HEIGHT / CELL_SIZE) {
+		return false;
+	}
+
+	return maze[gridY][gridX] != WALL;
+}
+
 // the "unshooting bullet" function:
-void stayingBullet(Bullet* bullet, Player_Position playerPos, SDL_Texture* currentPlayer) {
+void stayingBullet(Bullet* bullet, SDL_Texture* currentPlayer) {
 
 	// the track displacement:
 	int bulletOffsetX = 20;
@@ -181,27 +234,27 @@ void stayingBullet(Bullet* bullet, Player_Position playerPos, SDL_Texture* curre
 
 		bullet->direction = up;
 		bullet->x = playerPos.x + (PLAYER_WIDTH / 2) - bulletOffsetX;
-		bullet->y = playerPos.y + bulletOffsetY;
+		bullet->y = playerPos.y + bulletOffsetY + 20;
 
 	}
 	else if (currentPlayer == player_down) {
 
 		bullet->direction = down;
 		bullet->x = playerPos.x + (PLAYER_WIDTH / 2) + 7;
-		bullet->y = playerPos.y + PLAYER_HEIGHT;
+		bullet->y = playerPos.y + PLAYER_HEIGHT - 20;
 
 	}
 	else if (currentPlayer == player_left) {
 
 		bullet->direction = left;
-		bullet->x = playerPos.x;
+		bullet->x = playerPos.x + 10;
 		bullet->y = playerPos.y + (PLAYER_HEIGHT / 2) + 6;
 
 	}
 	else if (currentPlayer == player_right) {
 		
 		bullet->direction = right;
-		bullet->x = playerPos.x + PLAYER_WIDTH;
+		bullet->x = playerPos.x + PLAYER_WIDTH - 20;
 		bullet->y = playerPos.y + (PLAYER_HEIGHT / 2) - 17;
 
 	}
@@ -232,7 +285,6 @@ bool bulletCollision(Bullet* bullet) {
 				bullet->is_fired = false;
 				return false;
 			}
-
 			if (maze[gridY][gridX] == WALL) {
 				bullet->is_fired = false;
 				return false;
@@ -307,11 +359,13 @@ void quit_game() {
 	SDL_DestroyTexture(enemy_1);
 	SDL_DestroyTexture(enemy_2);
 	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
 	SDL_FreeSurface(labyrinth);
+	SDL_DestroyWindow(window);
+
 	labyrinth = NULL;
-	currentPlayer = player_right = player_left = player_down = player_up =
-		bullet = map = enemy_1 = enemy_2 = NULL;
+	map = NULL;
+	currentPlayer = player_right = player_left = player_down = player_up = NULL;
+	bullet = enemy_1 = enemy_2 = NULL; // just two enemies for now... (more will be added)
 	renderer = NULL;
 	window = NULL;
 
@@ -398,7 +452,12 @@ int main(int argc, char* argv[]) {
 				}
 
 				if (keyStates[SDL_SCANCODE_E] && !theBullet.is_fired) {
-					stayingBullet(&theBullet, playerPos, currentPlayer);
+
+					theBullet.direction = getBulletDirection(currentPlayer);
+					
+					if (theBullet.direction != -1 && canShoot(theBullet.direction)) {
+						stayingBullet(&theBullet, currentPlayer);
+					}
 				}
 
 				bulletMoving(&theBullet);
@@ -434,7 +493,7 @@ int main(int argc, char* argv[]) {
 
 				SDL_RenderPresent(renderer); // the updating of the textures on the map
 
-				SDL_Delay(28);
+				SDL_Delay(28); // for about 35fps (+-)
 			}
 		}
 	}
