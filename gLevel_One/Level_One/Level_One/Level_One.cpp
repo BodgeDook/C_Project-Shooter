@@ -390,7 +390,7 @@ int main(int argc, char* argv[]) {
 		player_left = loadTexture("Images/main_player_left.bmp");
 		player_down = loadTexture("Images/main_player_down.bmp");
 		player_up = loadTexture("Images/main_player_up.bmp");
-		bullet = loadTexture("Images/the_bullet.bmp"); // the bullet!
+		bullet = loadTexture("Images/the_bullet.bmp");
 		enemy_1 = loadTexture("Images/the_enemy.bmp");
 		enemy_2 = loadTexture("Images/the_enemy.bmp");
 
