@@ -2,11 +2,12 @@
 // #include <SDL_image.h> // removed for now...
 #include <stdio.h>
 #include <stdbool.h>
+#include "alg.h" // from Ivan's part
 
 const int WIDTH = 1080;
 const int HEIGHT = 720;
-const int PLAYER_WIDTH = 60; // final value!
-const int PLAYER_HEIGHT = 60; // final value!
+const int PLAYER_WIDTH = 60;
+const int PLAYER_HEIGHT = 60;
 const int ENEMY_SIZES = 60;
 const int BULLET_SIZE = 10;
 
@@ -17,17 +18,16 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 SDL_Texture* map = NULL;
 
-// the main player (textures):
+// the main player textures:
 SDL_Texture* player_right = NULL;
 SDL_Texture* player_left = NULL;
 SDL_Texture* player_down = NULL;
 SDL_Texture* player_up = NULL;
 SDL_Texture* currentPlayer = NULL; // the main player's texture!
 
-// added...
+// the Enemies' textures:
 SDL_Texture* enemy_1 = NULL;
 SDL_Texture* enemy_2 = NULL;
-// added...
 
 // the player's gun bullet:
 SDL_Texture* bullet = NULL;
@@ -36,21 +36,18 @@ SDL_Surface* labyrinth = NULL; // the labyrinth's surface
 const int CELL_SIZE = 1; // the size of one map's cell (in pixels)
 int maze[720][1080]; // the labyrinth's maze
 
-typedef struct Player_Position {
-	int x;
-	int y;
-} Player_Position;
-
+// the main player:
 Player_Position playerPos; // the position of the player on the game's map
+// the Enemies (4):
+enemy Enemies[2]; // the Enemies' positions and behavers structer
 
 typedef struct Bullet {
 	int x;
 	int y;
 	bool is_fired; // "shooted bullet" or not
 	int direction;
+	bool gotInEnemy;
 } Bullet; // the behave of the player's gun bullet of the playing field
-
-SDL_Texture* loadTexture(const char* path);
 
 int initialization() {
 
@@ -329,8 +326,9 @@ void bulletMoving(Bullet* bullet) {
 		temp_bullet.y = new_y;
 
 		// if collision occurs, we reset the actual bullet
-		if (!bulletCollision(&temp_bullet)) {
+		if (!bulletCollision(&temp_bullet) || bullet->gotInEnemy == true) {
 			resetBullet(bullet);
+			bullet->gotInEnemy = false;
 		}
 		else {
 			bullet->x = new_x;
@@ -341,11 +339,43 @@ void bulletMoving(Bullet* bullet) {
 	return;
 }
 
+void initialiseEnemies() {
+
+	// first enemy initialisation:
+	Enemies[0].x = 250;
+	Enemies[0].y = 20;
+	Enemies[0].isTriggered = 0;
+	Enemies[0].isKilled = 0; // 0 means that the enemy is alive
+
+	// second enemy initialisation:
+	Enemies[1].x = 675;
+	Enemies[1].y = 640;
+	Enemies[1].isTriggered = 0;
+	Enemies[1].isKilled = 0;
+
+	return;
+}
+
+void checkBulletHit(Bullet* bullet) {
+	for (int i = 0; i < 2; i++) {
+		if (bullet->is_fired && Enemies[i].isKilled < 3 &&
+			bullet->x >= Enemies[i].x && bullet->x <= (Enemies[i].x + ENEMY_SIZES) &&
+			bullet->y >= Enemies[i].y && bullet->y <= (Enemies[i].y + ENEMY_SIZES)) {
+
+			Enemies[i].isKilled += 1;
+
+			bullet->gotInEnemy = true;
+
+			return;
+		}
+	}
+}
+
 void quit_game() {
 
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
-			maze[i][j] = NULL; // for the memory cleaning after work of the matrix (THE MOST IMPORTANT!!!)
+			maze[i][j] = NULL;
 		}
 	}
 
@@ -365,7 +395,7 @@ void quit_game() {
 	labyrinth = NULL;
 	map = NULL;
 	currentPlayer = player_right = player_left = player_down = player_up = NULL;
-	bullet = enemy_1 = enemy_2 = NULL; // just two enemies for now... (more will be added)
+	bullet = enemy_1 = enemy_2 = NULL;
 	renderer = NULL;
 	window = NULL;
 
@@ -391,8 +421,8 @@ int main(int argc, char* argv[]) {
 		player_down = loadTexture("Images/main_player_down.bmp");
 		player_up = loadTexture("Images/main_player_up.bmp");
 		bullet = loadTexture("Images/the_bullet.bmp");
-		enemy_1 = loadTexture("Images/the_enemy.bmp");
-		enemy_2 = loadTexture("Images/the_enemy.bmp");
+		enemy_1 = loadTexture("Images/the_enemy_left.bmp"); // not current for now...
+		enemy_2 = loadTexture("Images/the_enemy_right.bmp"); // not current for now...
 
 		labyrinth = loadSurface("Images/wbmap.bmp");
 		mazeFilling(labyrinth, maze, CELL_SIZE);
@@ -400,7 +430,9 @@ int main(int argc, char* argv[]) {
 		playerPos.x = 40; // the start position of the player on "x" coordinate
 		playerPos.y = (HEIGHT / 2) - 100; // the start position of the player on "y" coordinate
 
-		Bullet theBullet = { 0, 0, false, -1 }; // crearing the bullet object
+		Bullet theBullet = { 0, 0, false, -1, false}; // crearing the bullet object
+
+		initialiseEnemies();
 
 		if (!map) {
 			printf("Texture's downloading down...\n");
@@ -418,7 +450,7 @@ int main(int argc, char* argv[]) {
 				while (SDL_PollEvent(&event)) {
 
 					if (event.type == SDL_QUIT) {
-						isRunning = false; // the first exit out of the game (the main*)
+						isRunning = false;
 					}
 					if (event.type == SDL_KEYDOWN) {
 						keyStates[event.key.keysym.scancode] = true;
@@ -448,7 +480,7 @@ int main(int argc, char* argv[]) {
 					currentPlayer = player_right;
 				}
 				else if (keyStates[SDL_SCANCODE_Q]) {
-					isRunning = false; // the second exit out of the game (added for sure*)
+					isRunning = false;
 				}
 
 				if (keyStates[SDL_SCANCODE_E] && !theBullet.is_fired) {
@@ -460,6 +492,7 @@ int main(int argc, char* argv[]) {
 					}
 				}
 
+				checkBulletHit(&theBullet);
 				bulletMoving(&theBullet);
 				
 				if (playerCollision(newX, newY)) {
@@ -473,18 +506,19 @@ int main(int argc, char* argv[]) {
 				SDL_Rect mapRect = { NULL, NULL, WIDTH, HEIGHT };
 				SDL_RenderCopy(renderer, map, NULL, &mapRect);
 
-				// the enemy_1 rendering
-				SDL_Rect enemyRect_1 = { 250, 20, ENEMY_SIZES, ENEMY_SIZES };
-				SDL_RenderCopy(renderer, enemy_1, NULL, &enemyRect_1);
-
-				// the enemy_2 rendering
-				SDL_Rect enemyRect_2 = { 995, 640, ENEMY_SIZES, ENEMY_SIZES };
-				SDL_RenderCopy(renderer, enemy_2, NULL, &enemyRect_2);
-
 				// the bullet rendering
 				if (theBullet.is_fired) {
 					SDL_Rect bulletRect = { theBullet.x, theBullet.y, BULLET_SIZE, BULLET_SIZE };
 					SDL_RenderCopy(renderer, bullet, NULL, &bulletRect);
+				}
+
+				// enemies rendering with isKilled < 3
+				for (int i = 0; i < 2; i++) {
+					if (Enemies[i].isKilled < 3) {
+						SDL_Rect enemyRect = { Enemies[i].x, Enemies[i].y, ENEMY_SIZES, ENEMY_SIZES };
+						SDL_Texture* enemyTexture = (i % 2 == 0) ? enemy_1 : enemy_2;
+						SDL_RenderCopy(renderer, enemyTexture, NULL, &enemyRect);
+					}
 				}
 
 				// the player rendering
@@ -498,7 +532,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	quit_game(); // the end of the game.
+	quit_game();
 
 	return 0;
 }
