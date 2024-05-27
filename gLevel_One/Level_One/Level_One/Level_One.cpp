@@ -1,5 +1,5 @@
 #include <SDL.h>
-// #include <SDL_image.h>
+// #include <SDL_image.h> // deleted for now...
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -52,7 +52,7 @@ typedef struct Bullet {
 
 SDL_Texture* loadTexture(const char* path);
 
-int init_function() {
+int initialization() {
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("Possible problem with: %s\n", SDL_GetError());
@@ -178,24 +178,32 @@ void stayingBullet(Bullet* bullet, Player_Position playerPos, SDL_Texture* curre
 	int up = 0, down = 1, left = 2, right = 3;
 
 	if (currentPlayer == player_up) {
+
 		bullet->direction = up;
 		bullet->x = playerPos.x + (PLAYER_WIDTH / 2) - bulletOffsetX;
 		bullet->y = playerPos.y + bulletOffsetY;
+
 	}
 	else if (currentPlayer == player_down) {
+
 		bullet->direction = down;
 		bullet->x = playerPos.x + (PLAYER_WIDTH / 2) + 7;
 		bullet->y = playerPos.y + PLAYER_HEIGHT;
+
 	}
 	else if (currentPlayer == player_left) {
+
 		bullet->direction = left;
 		bullet->x = playerPos.x;
 		bullet->y = playerPos.y + (PLAYER_HEIGHT / 2) + 6;
+
 	}
 	else if (currentPlayer == player_right) {
+		
 		bullet->direction = right;
 		bullet->x = playerPos.x + PLAYER_WIDTH;
 		bullet->y = playerPos.y + (PLAYER_HEIGHT / 2) - 17;
+
 	}
 
 	return;
@@ -281,7 +289,7 @@ void bulletMoving(Bullet* bullet) {
 	return;
 }
 
-void quit_function() {
+void quit_game() {
 
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
@@ -314,7 +322,7 @@ void quit_function() {
 
 int main(int argc, char* argv[]) {
 
-	if (init_function() != 0) {
+	if (initialization() != 0) {
 		printf("Initialisation down...\n");
 		return 1;
 	}
@@ -324,7 +332,6 @@ int main(int argc, char* argv[]) {
 
 		// the main textures' loadings:
 		map = loadTexture("Images/the_map.bmp");
-		currentPlayer = loadTexture("Images/main_player_right.bmp");
 		player_right = loadTexture("Images/main_player_right.bmp");
 		player_left = loadTexture("Images/main_player_left.bmp");
 		player_down = loadTexture("Images/main_player_down.bmp");
@@ -348,6 +355,7 @@ int main(int argc, char* argv[]) {
 		else {
 
 			bool isRunning = true;
+			currentPlayer = player_right; // the start position of the player...
 
 			while (isRunning) {
 
@@ -431,7 +439,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	quit_function(); // the end of the game.
+	quit_game(); // the end of the game.
 
 	return 0;
 }
