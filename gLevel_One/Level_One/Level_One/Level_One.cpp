@@ -210,7 +210,7 @@ void stayingBullet(Bullet* bullet, Player_Position playerPos, SDL_Texture* curre
 }
 
 // the reseting the bullet if it got into the board or wall and bringing back to the player's position:
-void resetBullet(Bullet* bullet, Player_Position playerPos) {
+void resetBullet(Bullet* bullet) {
 
 	bullet->is_fired = false;
 
@@ -278,7 +278,7 @@ void bulletMoving(Bullet* bullet) {
 
 		// if collision occurs, we reset the actual bullet
 		if (!bulletCollision(&temp_bullet)) {
-			resetBullet(bullet, playerPos);
+			resetBullet(bullet);
 		}
 		else {
 			bullet->x = new_x;
