@@ -10,34 +10,34 @@
 #define MW 1080
 #define MH 720
 
-extern const int W;         // ширина рабочего поля
-extern const int H;         // высота рабочего поля
-extern const int WALL;      // непроходимая ячейка
-extern const int BLANK;     // свободная непомеченная ячейка
+extern const int W;         // С€РёСЂРёРЅР° СЂР°Р±РѕС‡РµРіРѕ РїРѕР»СЏ
+extern const int H;         // РІС‹СЃРѕС‚Р° СЂР°Р±РѕС‡РµРіРѕ РїРѕР»СЏ
+extern const int WALL;      // РЅРµРїСЂРѕС…РѕРґРёРјР°СЏ СЏС‡РµР№РєР°
+extern const int BLANK;     // СЃРІРѕР±РѕРґРЅР°СЏ РЅРµРїРѕРјРµС‡РµРЅРЅР°СЏ СЏС‡РµР№РєР°
 
 extern int px[1080 * 720], py[1080 * 720];
 
 typedef struct enemy {
-    int x; // current x
+    int x; // currrent x
     int y; // current y
-    int isTriggered; //if found the player
-    int isKilled; //if is killed (3 times to shoot)
+    int isTriggered; //if 1 fire
+    int isKilled; //if 1 is killed
 } enemy;
 
 typedef struct Player_Position {
     int x;
     int y;
-    // int h;
+    int isKilled;
 } Player_Position;
 
 typedef struct path {
-    int x[MW*2];
-    int y[MH*2];
+    int x[MW * 2];
+    int y[MH * 2];
     int len;
 } path;
 
-// Функции, объявленные в alg.c
+// Р¤СѓРЅРєС†РёРё, РѕР±СЉСЏРІР»РµРЅРЅС‹Рµ РІ alg.c
 int lee(int** grid, int ax, int ay, int bx, int by, int iter);
-path enemyToHero(enemy e1, Player_Position h1);
+path enemyToHero(enemy e1, Player_Position h1, int grid[720][1080]);
 
 #endif // ALG_H
