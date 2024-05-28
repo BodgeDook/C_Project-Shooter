@@ -2,6 +2,7 @@
 // #include <SDL_image.h> // removed for now...
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 #include "alg.h" // from Ivan's part
 
 const int WIDTH = 1080;
@@ -13,8 +14,8 @@ const int BULLET_SIZE = 10;
 
 bool gameWonEnding = false;
 
-const int WALL = -1; // barrier cell of the matrix (a labyrinth's wall)
-const int BLANK = -2; // free cell of the matrix (a map's free hall)
+//const int WALL = -1; // barrier cell of the matrix (a labyrinth's wall)
+//const int BLANK = -2; // free cell of the matrix (a map's free hall)
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -39,6 +40,7 @@ SDL_Texture* bullet = NULL;
 SDL_Surface* labyrinth = NULL; // the labyrinth's surface
 const int CELL_SIZE = 1; // the size of one map's cell (in pixels)
 int maze[720][1080]; // the labyrinth's maze
+int maze_Copy[720][1080];
 
 // the main player:
 Player_Position playerPos; // the position of the player on the game's map
@@ -253,7 +255,7 @@ void stayingBullet(Bullet* bullet, SDL_Texture* currentPlayer) {
 
 	}
 	else if (currentPlayer == player_right) {
-		
+
 		bullet->direction = right;
 		bullet->x = playerPos.x + PLAYER_WIDTH - 20;
 		bullet->y = playerPos.y + (PLAYER_HEIGHT / 2) - 17;
@@ -414,11 +416,31 @@ void quit_game() {
 	window = NULL;
 
 	SDL_Quit();
-	
+
 	return;
 }
 
 int main(int argc, char* argv[]) {
+	time_t start, end;
+	double elapsed;
+	time(&start);
+	const int interval = 10;
+	Player_Position h1;
+	enemy e1;
+	e1.x = 250;
+	e1.y = 20;
+	enemy e2;
+	e2.x = 675;
+	e2.y = 640;
+	path p1;
+	p1.len = 0;
+	p1.x[p1.len] = { 0 };
+	p1.y[p1.len] = { 0 };
+	path p2;
+	p2.len = 0;
+	p2.x[p2.len] = { 0 };
+	p2.y[p2.len] = { 0 };
+	int cnt = 0, cnt1 = 0;
 
 	if (initialization() != 0) {
 		printf("Initialisation down...\n");
@@ -446,7 +468,7 @@ int main(int argc, char* argv[]) {
 		playerPos.x = 40; // the start position of the player on "x" coordinate
 		playerPos.y = (HEIGHT / 2) - 100; // the start position of the player on "y" coordinate
 
-		Bullet theBullet = { 0, 0, false, -1, false}; // crearing the bullet object
+		Bullet theBullet = { 0, 0, false, -1, false }; // crearing the bullet object
 
 		initialiseEnemies();
 
@@ -510,20 +532,20 @@ int main(int argc, char* argv[]) {
 				int newX = playerPos.x;
 				int newY = playerPos.y;
 
-				if (keyStates[SDL_SCANCODE_W]) { 
-					newY -= 5; 
+				if (keyStates[SDL_SCANCODE_W]) {
+					newY -= 5;
 					currentPlayer = player_up;
 				}
-				else if (keyStates[SDL_SCANCODE_S]) { 
-					newY += 5; 
+				else if (keyStates[SDL_SCANCODE_S]) {
+					newY += 5;
 					currentPlayer = player_down;
 				}
-				else if (keyStates[SDL_SCANCODE_A]) { 
-					newX -= 5; 
+				else if (keyStates[SDL_SCANCODE_A]) {
+					newX -= 5;
 					currentPlayer = player_left;
 				}
-				else if (keyStates[SDL_SCANCODE_D]) { 
-					newX += 5; 
+				else if (keyStates[SDL_SCANCODE_D]) {
+					newX += 5;
 					currentPlayer = player_right;
 				}
 				else if (keyStates[SDL_SCANCODE_Q]) {
@@ -533,7 +555,7 @@ int main(int argc, char* argv[]) {
 				if (keyStates[SDL_SCANCODE_E] && !theBullet.is_fired) {
 
 					theBullet.direction = getBulletDirection(currentPlayer);
-					
+
 					if (theBullet.direction != -1 && canShoot(theBullet.direction)) {
 						stayingBullet(&theBullet, currentPlayer);
 					}
@@ -541,7 +563,7 @@ int main(int argc, char* argv[]) {
 
 				checkBulletHit(&theBullet);
 				bulletMoving(&theBullet);
-				
+
 				if (playerCollision(newX, newY)) {
 					playerPos.x = newX;
 					playerPos.y = newY;
@@ -557,6 +579,80 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 
+				h1.x = playerPos.x;
+				h1.y = playerPos.y;
+
+				const int interval = 10;
+				time(&end);
+				elapsed = difftime(end, start);
+				if (elapsed >= interval && Enemies[0].isKilled != 3) {
+
+					for (int i = 0; i != 720; i++) {
+						for (int j = 0; j != 1080; j++) maze_Copy[i][j] = maze[i][j];
+					}
+					printf("Hero cord x:%d y:%d\n", h1.x, h1.y);
+					p1 = enemyToHero(e1, h1, maze_Copy);
+					time(&start);
+					cnt = 0;
+				}
+				if (elapsed >= interval && Enemies[1].isKilled != 3) {
+
+					for (int i = 0; i != 720; i++) {
+						for (int j = 0; j != 1080; j++) maze_Copy[i][j] = maze[i][j];
+					}
+					p2 = enemyToHero(e2, h1, maze_Copy);
+					time(&start);
+					cnt1 = 0;
+				}
+				if (cnt <= p1.len && p1.len) {
+					e1.x = p1.x[cnt];
+					e1.y = p1.y[cnt];
+					cnt += 4;
+
+					printf("p1.x:%d, p1.y:%d, p1.len:%d, wall:%d\n", p1.x[cnt], p1.y[cnt], p1.len, maze[e1.y][e1.x]);
+					int flag = 0;
+					for (int k = 0; k != 60; k++) {
+						if (maze[e1.y + k][e1.x] == WALL) {
+							//printf("Wall collision; Enemy x:%d\n", e1.y);
+							e1.y = e1.y - (60 - k);
+							//printf("Enemy x changed:%d\n", e1.y);
+							break;
+						}
+					}
+					for (int k = 0; k != 60; k++) {
+						if (maze[e1.y][e1.x + k] == WALL) {
+							//printf("Wall collision; Enemy x:%d\n", e1.y);
+							e1.x = e1.x - (60 - k);
+							//printf("Enemy x changed:%d\n", e1.y);
+							break;
+						}
+					}
+				}
+
+				if (cnt1 <= p2.len && p2.len) {
+					e2.x = p2.x[cnt1];
+					e2.y = p2.y[cnt1];
+					cnt1 += 4;
+
+					int flag = 0;
+					for (int k = 0; k != 60; k++) {
+						if (maze[e2.y + k][e2.x] == WALL) {
+							e2.y = e2.y - (60 - k);
+							break;
+						}
+					}
+					for (int k = 0; k != 60; k++) {
+						if (maze[e2.y][e2.x + k] == WALL) {
+							e2.x = e2.x - (60 - k);
+							break;
+						}
+					}
+				}
+
+				Enemies[0].x = e1.x;
+				Enemies[0].y = e1.y;
+				Enemies[1].x = e2.x;
+				Enemies[1].y = e2.y;
 				SDL_RenderClear(renderer);
 
 				// the map rendering
