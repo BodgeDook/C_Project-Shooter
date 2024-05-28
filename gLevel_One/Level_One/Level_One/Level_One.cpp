@@ -376,7 +376,7 @@ void checkBulletHit(Bullet* bullet) {
 
 void checkGameWinningEnd() {
 	if (Enemies[0].isKilled >= 3 && Enemies[1].isKilled >= 3 &&
-		playerPos.x >= 1015 && playerPos.y == 485) {
+		playerPos.x >= 1015 && ((480 <= playerPos.y) && (playerPos.y <= 490))) {
 		// the player has won!!!
 		gameWonEnding = true;
 	}
@@ -543,8 +543,8 @@ int main(int argc, char* argv[]) {
 					playerPos.x = newX;
 					playerPos.y = newY;
 
-					// printf("x: %d\n", playerPos.x); - 1015
-					// printf("y: %d\n", playerPos.y); - 485
+					//printf("x: %d\n", playerPos.x); // 1015
+					//printf("y: %d\n", playerPos.y); // 485
 				}
 
 				checkGameWinningEnd();
