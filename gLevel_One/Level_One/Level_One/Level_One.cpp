@@ -20,6 +20,7 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 SDL_Texture* map = NULL;
 SDL_Texture* menu = NULL;
+SDL_Texture* won_ending = NULL;
 
 // the main player textures:
 SDL_Texture* player_right = NULL;
@@ -391,6 +392,7 @@ void quit_game() {
 	}
 
 	SDL_DestroyTexture(map);
+	SDL_DestroyTexture(won_ending);
 	SDL_DestroyTexture(menu);
 	SDL_DestroyTexture(player_right);
 	SDL_DestroyTexture(player_left);
@@ -405,7 +407,7 @@ void quit_game() {
 	SDL_DestroyWindow(window);
 
 	labyrinth = NULL;
-	menu = map = NULL;
+	won_ending = menu = map = NULL;
 	currentPlayer = player_right = player_left = player_down = player_up = NULL;
 	bullet = enemy_1 = enemy_2 = NULL;
 	renderer = NULL;
@@ -427,6 +429,7 @@ int main(int argc, char* argv[]) {
 		bool keyStates[SDL_NUM_SCANCODES] = { false }; // the mass of the key activity values 
 
 		// the main textures' loadings:
+		won_ending = loadTexture("Images/winning.bmp");
 		menu = loadTexture("Images/the_menu.bmp");
 		map = loadTexture("Images/the_map.bmp");
 		player_right = loadTexture("Images/main_player_right.bmp");
@@ -586,7 +589,12 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// SDL_Delay(3000);
+	if (gameWonEnding) {
+		SDL_Rect winningRect = { 0, 0, WIDTH, HEIGHT };
+		SDL_RenderCopy(renderer, won_ending, NULL, &winningRect);
+		SDL_RenderPresent(renderer);
+		SDL_Delay(3000);
+	}
 
 	quit_game();
 
