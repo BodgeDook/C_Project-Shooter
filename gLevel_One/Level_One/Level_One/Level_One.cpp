@@ -17,6 +17,7 @@ const int BLANK = -2; // free cell of the matrix (a map's free hall)
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 SDL_Texture* map = NULL;
+SDL_Texture* menu = NULL;
 
 // the main player textures:
 SDL_Texture* player_right = NULL;
@@ -380,6 +381,7 @@ void quit_game() {
 	}
 
 	SDL_DestroyTexture(map);
+	SDL_DestroyTexture(menu);
 	SDL_DestroyTexture(player_right);
 	SDL_DestroyTexture(player_left);
 	SDL_DestroyTexture(player_down);
@@ -393,7 +395,7 @@ void quit_game() {
 	SDL_DestroyWindow(window);
 
 	labyrinth = NULL;
-	map = NULL;
+	menu = map = NULL;
 	currentPlayer = player_right = player_left = player_down = player_up = NULL;
 	bullet = enemy_1 = enemy_2 = NULL;
 	renderer = NULL;
@@ -415,6 +417,7 @@ int main(int argc, char* argv[]) {
 		bool keyStates[SDL_NUM_SCANCODES] = { false }; // the mass of the key activity values 
 
 		// the main textures' loadings:
+		menu = loadTexture("Images/the_menu.bmp");
 		map = loadTexture("Images/the_map.bmp");
 		player_right = loadTexture("Images/main_player_right.bmp");
 		player_left = loadTexture("Images/main_player_left.bmp");
@@ -434,13 +437,44 @@ int main(int argc, char* argv[]) {
 
 		initialiseEnemies();
 
+		bool menuShown = true;
+		bool isRunning = true;
+
+		if (!menu) {
+			printf("Problem with menu's texture...\n");
+		}
+		else {
+
+			while (isRunning && menuShown) {
+				SDL_Event event;
+				while (SDL_PollEvent(&event)) {
+					if (event.type == SDL_QUIT) {
+						isRunning = false;
+					}
+					if (event.type == SDL_KEYDOWN) {
+						if (event.key.keysym.scancode == SDL_SCANCODE_X) {
+							menuShown = false;
+						}
+						if (event.key.keysym.scancode == SDL_SCANCODE_Q) {
+							menuShown = false;
+							isRunning = false;
+						}
+					}
+				}
+				// menu drawing:
+				SDL_RenderClear(renderer);
+				SDL_Rect menuRect = { 0, 0, WIDTH, HEIGHT };
+				SDL_RenderCopy(renderer, menu, NULL, &menuRect);
+				SDL_RenderPresent(renderer);
+			}
+		}
+
 		if (!map) {
 			printf("Texture's downloading down...\n");
 			return 1;
 		}
 		else {
 
-			bool isRunning = true;
 			currentPlayer = player_right; // the start pose of the player...
 
 			while (isRunning) {
