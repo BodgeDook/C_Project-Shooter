@@ -11,6 +11,8 @@ const int PLAYER_HEIGHT = 60;
 const int ENEMY_SIZES = 60;
 const int BULLET_SIZE = 10;
 
+bool gameWonEnding = false;
+
 const int WALL = -1; // barrier cell of the matrix (a labyrinth's wall)
 const int BLANK = -2; // free cell of the matrix (a map's free hall)
 
@@ -39,7 +41,7 @@ int maze[720][1080]; // the labyrinth's maze
 
 // the main player:
 Player_Position playerPos; // the position of the player on the game's map
-// the Enemies (4):
+// the Enemies (2):
 enemy Enemies[2]; // the Enemies' positions and behavers structer
 
 typedef struct Bullet {
@@ -372,6 +374,14 @@ void checkBulletHit(Bullet* bullet) {
 	}
 }
 
+void checkGameWinningEnd() {
+	if (Enemies[0].isKilled >= 3 && Enemies[1].isKilled >= 3 &&
+		playerPos.x >= 1015 && playerPos.y == 485) {
+		// the player has won!!!
+		gameWonEnding = true;
+	}
+}
+
 void quit_game() {
 
 	for (int i = 0; i < HEIGHT; i++) {
@@ -532,6 +542,16 @@ int main(int argc, char* argv[]) {
 				if (playerCollision(newX, newY)) {
 					playerPos.x = newX;
 					playerPos.y = newY;
+
+					// printf("x: %d\n", playerPos.x); - 1015
+					// printf("y: %d\n", playerPos.y); - 485
+				}
+
+				checkGameWinningEnd();
+
+				if (gameWonEnding) {
+					printf("Congratulations! You've won the game!\n");
+					break;
 				}
 
 				SDL_RenderClear(renderer);
@@ -565,6 +585,8 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	}
+
+	// SDL_Delay(3000);
 
 	quit_game();
 
